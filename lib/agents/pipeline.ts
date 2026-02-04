@@ -30,12 +30,11 @@ export async function runPipeline(
     editorMs: 0,
   };
 
-  // 🕵️ Researcher
+
   const t1 = Date.now();
   const research = await runResearcher(topic);
   timings.researchMs = Date.now() - t1;
 
-  // ✍️ Writer
   let draft: Draft | null = null;
   try {
     const t2 = Date.now();
@@ -45,7 +44,7 @@ export async function runPipeline(
     console.error("Writer failed:", err);
   }
 
-  // 🧑‍⚖️ Editor
+  
   let edited: FinalArticle | null = null;
   if (draft && !options.skipEditor) {
     try {
