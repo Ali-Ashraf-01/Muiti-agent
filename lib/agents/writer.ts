@@ -1,29 +1,26 @@
-import { generateObject } from "ai";
+import { streamObject } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { DraftSchema, type Draft } from "@/lib/schemas/writer";
 import type { ResearchBrief } from "@/lib/schemas/researcher";
 
-export async function runWriter(brief: ResearchBrief): Promise<Draft> {
-  const result = await generateObject({
+export async function runWriter(research: ResearchBrief) {
+  const stream = await streamObject({
     model: openai("gpt-4o-mini"),
+    temperature: 0.5,
+    topP: 0.9,
     schema: DraftSchema,
-    temperature: 0.6,
-    topP: 0.95,
-    system: "You are a professional content writer.",
-    prompt: `
-Create a well-structured first draft based on the research brief below.
-Use a clear, friendly tone suitable for an online article or blog post.
-Do NOT include a citations section.
-
-RESEARCH BRIEF (JSON):
-${JSON.stringify(brief, null, 2)}
-    `.trim(),
+    prompt: [
+      "You are a professional content writer tasked with creating a high-quality first draft.",
+      "Your goals:",
+      "- Organize content into sections with clear headings and subheadings",
+      "- Ensure smooth flow and logical progression between paragraphs",
+      "- Use examples, data, and citations from the research brief",
+      "- Highlight key points or insights",
+      "- Maintain clarity, coherence, and professional tone",
+      "",
+      `Research: ${JSON.stringify(research)}`
+    ].join("\n"),
   });
 
-  if (!result.object) {
-    throw new Error("Writer agent returned empty result");
-  }
-
-  return result.object;
+  return stream;
 }
-
