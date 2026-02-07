@@ -22,6 +22,7 @@ type PipelineResult = {
   timings: {
     researchMs: number;
     writerMs: number;
+    workerMs: number;
     editorMs: number;
   };
 };
@@ -39,20 +40,43 @@ export async function runPipeline(
   const timings = {
     researchMs: 0,
     writerMs: 0,
+    workerMs: 0,
     editorMs: 0,
   };
 
- 
+  // 1️⃣ Researcher
   const researchTimed = await runWithTiming(() => runResearcher(topic));
   const research = researchTimed.result;
   timings.researchMs = researchTimed.ms;
 
-
+  // 2️⃣ Writer
   const writerTimed = await runWithTiming(() => runWriter(research));
   const draft: Draft | null = writerTimed.result;
   timings.writerMs = writerTimed.ms;
 
-  
+  // 3️⃣ Example workers (Orchestrator-Worker pattern)
+  //مجرد مثال كدا  وكدا يعني 
+  const dummyWorker1 = async () => {
+    // simulate some processing
+    await new Promise((res) => setTimeout(res, 100));
+    return "Worker1 done";
+  };
+
+  const dummyWorker2 = async () => {
+    // simulate some processing
+    await new Promise((res) => setTimeout(res, 150));
+    return "Worker2 done";
+  };
+
+  const workerTimed = await runWithTiming(async () => {
+    const results = await Promise.all([dummyWorker1(), dummyWorker2()]);
+    return results;
+  });
+  timings.workerMs = workerTimed.ms;
+
+  console.log("Worker results:", workerTimed.result); // optional log
+
+  // 4️⃣ Editor
   let edited: FinalArticle | null = null;
   if (draft && !options.skipEditor) {
     const editorTimed = await runWithTiming(() => runEditor({ draft }));
